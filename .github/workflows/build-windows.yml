@@ -1,0 +1,62 @@
+name: Build Windows Executable
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.7.2' # Stable Qt 6 release available on GitHub Actions
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_mingw'
+          modules: 'qtquickcontrols2'
+
+      - name: Setup MinGW & Ninja
+        uses: aseptic-ninja/setup-ninja@v1
+        with:
+          version: '1.11.1'
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G "Ninja" `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_PREFIX_PATH="$env:Qt6_DIR"
+
+      - name: Build Project
+        run: |
+          cmake --build build --config Release
+
+      - name: Bundle with windeployqt
+        run: |
+          # Create a clean release directory
+          New-Item -ItemType Directory -Force -Path dist
+          
+          # Find and copy the built executable
+          $exe = Get-ChildItem -Path build -Filter "*.exe" -Recurse | Select-Object -First 1
+          Copy-Item $exe.FullName -Destination dist\Reval.exe
+
+          # Run windeployqt with QML directory inspection
+          & "$env:Qt6_DIR\bin\windeployqt.exe" --qmldir qml dist\Reval.exe
+
+      - name: Archive Executable & Dependencies
+        run: |
+          Compress-Archive -Path dist\* -DestinationPath Reval-Windows-x64.zip
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Reval-Windows-x64
+          path: Reval-Windows-x64.zip
