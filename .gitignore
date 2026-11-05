@@ -1,0 +1,16 @@
+# CMake & Build artifacts
+build/
+bin/
+CMakeLists.txt.user
+*.ninja
+*.o
+*.obj
+
+# SQLite database files
+*.db
+*.sqlite
+*.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db
