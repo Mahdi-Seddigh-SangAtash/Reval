@@ -5,7 +5,7 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch: # Allows manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
   build:
@@ -18,16 +18,11 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
-          version: '6.7.2' # Stable Qt 6 release available on GitHub Actions
+          version: '6.7.2'
           host: 'windows'
           target: 'desktop'
           arch: 'win64_mingw'
           modules: 'qtquickcontrols2'
-
-      - name: Setup MinGW & Ninja
-        uses: aseptic-ninja/setup-ninja@v1
-        with:
-          version: '1.11.1'
 
       - name: Configure CMake
         run: |
@@ -41,14 +36,9 @@ jobs:
 
       - name: Bundle with windeployqt
         run: |
-          # Create a clean release directory
           New-Item -ItemType Directory -Force -Path dist
-          
-          # Find and copy the built executable
           $exe = Get-ChildItem -Path build -Filter "*.exe" -Recurse | Select-Object -First 1
           Copy-Item $exe.FullName -Destination dist\Reval.exe
-
-          # Run windeployqt with QML directory inspection
           & "$env:Qt6_DIR\bin\windeployqt.exe" --qmldir qml dist\Reval.exe
 
       - name: Archive Executable & Dependencies
