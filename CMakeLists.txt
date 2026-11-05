@@ -9,6 +9,7 @@ find_package(Qt6 6.2 REQUIRED COMPONENTS Quick QuickControls2 Sql)
 qt_standard_project_setup()
 
 qt_add_executable(appReval
+    WIN32
     src/main.cpp
 )
 
